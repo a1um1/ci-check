@@ -1,10 +1,10 @@
 {
-  "status": "down",
-  "lastCheck": "2026-07-06T08:40:36.765Z",
-  "latency": 1191,
-  "uptime24h": 75,
-  "uptime7d": 75,
-  "uptime30d": 75,
+  "status": "up",
+  "lastCheck": "2026-07-06T08:42:39.126Z",
+  "latency": 1311,
+  "uptime24h": 80,
+  "uptime7d": 80,
+  "uptime30d": 80,
   "history": [
     {
       "timestamp": "2026-07-06T08:12:07.615Z",
@@ -25,13 +25,18 @@
       "timestamp": "2026-07-06T08:40:36.765Z",
       "status": "down",
       "latency": 1191
+    },
+    {
+      "timestamp": "2026-07-06T08:42:39.126Z",
+      "status": "up",
+      "latency": 1311
     }
   ],
   "incidents": [
     {
       "downAt": "2026-07-06T08:40:36.765Z",
-      "recoveredAt": null,
-      "durationMinutes": null
+      "recoveredAt": "2026-07-06T08:42:39.126Z",
+      "durationMinutes": 2
     }
   ]
 }
