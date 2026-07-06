@@ -14,7 +14,7 @@ status-website:
     - title: Status
       href: /
     - title: GitHub
-      href: https://github.com/a1um1/ci-check
+      href: https://github.com/a1um1/status
 
 notifications:
   - type: discord
