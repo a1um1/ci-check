@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>m3ow.xyz - Service Status</title>
+  <meta name="description" content="Uptime and response time monitoring for m3ow.xyz">
+  
+  <!-- Tailwind CSS v4 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl w-full mx-auto space-y-8 flex-grow">
+    
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white">m3ow.xyz Status</h1>
+          <p class="text-xs text-slate-400">Automated uptime monitoring</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full text-xs text-slate-400 font-medium">
+        <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse" id="last-update-pulse"></span>
+        <span id="last-checked">Loading...</span>
+      </div>
+    </header>
+
+    <!-- Main Status Card -->
+    <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute -right-20 -top-20 w-48 h-48 rounded-full blur-3xl opacity-10 bg-indigo-500 transition-all duration-1000" id="status-glow"></div>
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+        <div class="space-y-2">
+          <div class="flex items-center gap-3">
+            <span class="flex h-4 w-4 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" id="ping-outer"></span>
+              <span class="relative inline-flex rounded-full h-4 w-4" id="ping-inner"></span>
+            </span>
+            <h2 class="text-2xl font-bold tracking-tight" id="status-text">Checking Status...</h2>
+          </div>
+          <p class="text-slate-400 text-sm" id="status-desc">Evaluating latest monitor metrics and availability.</p>
+        </div>
+        <div class="flex items-center gap-8 border-t sm:border-t-0 sm:border-l border-slate-800 pt-4 sm:pt-0 sm:pl-8">
+          <div>
+            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Target Address</div>
+            <a href="https://m3ow.xyz" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 font-semibold text-lg flex items-center gap-1.5 group transition-colors">
+              m3ow.xyz
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Metrics Stats Grid -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- Card: 24h Uptime -->
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-5 hover:border-slate-800 transition-colors">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Uptime (24h)</div>
+        <div class="text-3xl font-extrabold text-white" id="uptime-24h">--%</div>
+      </div>
+      <!-- Card: 7d Uptime -->
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-5 hover:border-slate-800 transition-colors">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Uptime (7d)</div>
+        <div class="text-3xl font-extrabold text-white" id="uptime-7d">--%</div>
+      </div>
+      <!-- Card: Current Latency -->
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-5 hover:border-slate-800 transition-colors">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Latest Latency</div>
+        <div class="text-3xl font-extrabold text-white" id="latency-current">--ms</div>
+      </div>
+    </section>
+
+    <!-- 30-Day Uptime Grid -->
+    <section class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-white">Uptime History (Last 30 Days)</h3>
+        <span class="text-xs text-slate-400" id="uptime-30d-label">--% Uptime</span>
+      </div>
+      
+      <!-- Grid Bars -->
+      <div class="flex gap-[3px] h-9 items-end w-full" id="uptime-bars-container">
+        <!-- Bars will be injected dynamically -->
+      </div>
+      
+      <div class="flex justify-between items-center text-xs text-slate-500 mt-3">
+        <span>30 days ago</span>
+        <span class="w-16 h-px bg-slate-800/80 flex-grow mx-4"></span>
+        <span>Today</span>
+      </div>
+    </section>
+
+    <!-- Latency Chart -->
+    <section class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+      <h3 class="text-sm font-semibold text-white mb-6">Response Time History (Last 24 Hours)</h3>
+      <div class="h-64 w-full relative">
+        <canvas id="latencyChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Incidents Log -->
+    <section class="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+      <h3 class="text-sm font-semibold text-white mb-4">Incident Log (Recent)</h3>
+      <div class="divide-y divide-slate-800 max-h-60 overflow-y-auto pr-1" id="incidents-container">
+        <div class="text-slate-400 text-sm py-4 text-center">No incidents reported in the last 30 days.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="pt-12 text-center text-xs text-slate-600">
+    <p>Powered by GitHub Actions & Antigravity AI</p>
+  </footer>
+
+  <script>
+    // Config
+    const DATA_URL = 'data/status.json';
+    let chartInstance = null;
+
+    // Helper to format ISO date
+    function formatDate(isoStr) {
+      const date = new Date(isoStr);
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + 
+             date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Helper to calculate status of a single day
+    function groupHistoryByDay(history) {
+      const days = {};
+      const now = new Date();
+      
+      // Initialize last 30 days
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const dayStr = d.toISOString().split('T')[0];
+        days[dayStr] = {
+          date: dayStr,
+          checks: [],
+          status: 'no_data'
+        };
+      }
+
+      // Populate checks
+      history.forEach(check => {
+        const dateStr = check.timestamp.split('T')[0];
+        if (days[dateStr]) {
+          days[dateStr].checks.push(check);
+        }
+      });
+
+      // Compute status for each day
+      Object.keys(days).forEach(dayStr => {
+        const day = days[dayStr];
+        if (day.checks.length === 0) {
+          day.status = 'no_data';
+        } else {
+          const downChecks = day.checks.filter(c => c.status === 'down');
+          if (downChecks.length === 0) {
+            day.status = 'up';
+          } else if (downChecks.length === day.checks.length) {
+            day.status = 'down';
+          } else {
+            day.status = 'partial';
+          }
+        }
+      });
+
+      return Object.values(days).sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    async function loadStatus() {
+      try {
+        const response = await fetch(DATA_URL);
+        if (!response.ok) throw new Error('Failed to load status JSON');
+        
+        const data = await response.json();
+        
+        // Update Overall Status UI
+        const isUp = data.status === 'up';
+        
+        const statusText = document.getElementById('status-text');
+        const statusDesc = document.getElementById('status-desc');
+        const pingOuter = document.getElementById('ping-outer');
+        const pingInner = document.getElementById('ping-inner');
+        const statusGlow = document.getElementById('status-glow');
+        const lastChecked = document.getElementById('last-checked');
+        const lastUpdatePulse = document.getElementById('last-update-pulse');
+
+        lastChecked.textContent = 'Last checked: ' + formatDate(data.lastCheck);
+        lastUpdatePulse.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+
+        if (isUp) {
+          statusText.textContent = 'All Systems Operational';
+          statusText.className = 'text-2xl font-bold tracking-tight text-emerald-400';
+          statusDesc.textContent = `m3ow.xyz is responding normally. Last check returned status 2xx/3xx.`;
+          
+          pingOuter.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-500';
+          pingInner.className = 'relative inline-flex rounded-full h-4 w-4 bg-emerald-500';
+          
+          statusGlow.className = 'absolute -right-20 -top-20 w-48 h-48 rounded-full blur-3xl opacity-15 bg-emerald-500';
+        } else {
+          statusText.textContent = 'Service Outage';
+          statusText.className = 'text-2xl font-bold tracking-tight text-rose-500';
+          statusDesc.textContent = `m3ow.xyz is currently unreachable or timed out.`;
+          
+          pingOuter.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-500';
+          pingInner.className = 'relative inline-flex rounded-full h-4 w-4 bg-rose-500';
+          
+          statusGlow.className = 'absolute -right-20 -top-20 w-48 h-48 rounded-full blur-3xl opacity-15 bg-rose-500';
+        }
+
+        // Metrics
+        document.getElementById('uptime-24h').textContent = (data.uptime24h !== undefined ? data.uptime24h : 100) + '%';
+        document.getElementById('uptime-7d').textContent = (data.uptime7d !== undefined ? data.uptime7d : 100) + '%';
+        document.getElementById('uptime-30d-label').textContent = (data.uptime30d !== undefined ? data.uptime30d : 100) + '% Uptime';
+        document.getElementById('latency-current').textContent = data.latency + 'ms';
+
+        // 30-Day Uptime Bars
+        const dailyData = groupHistoryByDay(data.history);
+        const barContainer = document.getElementById('uptime-bars-container');
+        barContainer.innerHTML = '';
+        
+        dailyData.forEach(day => {
+          const bar = document.createElement('div');
+          bar.className = 'flex-grow h-full rounded-[2px] transition-all duration-300 relative group cursor-pointer';
+          
+          // Color based on status
+          if (day.status === 'up') {
+            bar.classList.add('bg-emerald-500', 'hover:bg-emerald-400');
+          } else if (day.status === 'down') {
+            bar.classList.add('bg-rose-500', 'hover:bg-rose-400');
+          } else if (day.status === 'partial') {
+            bar.classList.add('bg-amber-500', 'hover:bg-amber-400');
+          } else {
+            bar.classList.add('bg-slate-800', 'hover:bg-slate-700'); // No data
+          }
+
+          // Tooltip HTML
+          const tooltip = document.createElement('div');
+          tooltip.className = 'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-900 border border-slate-800 text-slate-100 text-xs rounded-lg p-2 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl';
+          
+          let dayStatusText = 'No data available';
+          if (day.status === 'up') dayStatusText = '100% Uptime';
+          if (day.status === 'down') dayStatusText = '100% Downtime';
+          if (day.status === 'partial') {
+            const upChecks = day.checks.filter(c => c.status === 'up').length;
+            const pct = Math.round((upChecks / day.checks.length) * 100);
+            dayStatusText = `Partial Outage (${pct}% Uptime)`;
+          }
+
+          const dateObj = new Date(day.date);
+          const formattedDate = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+          tooltip.innerHTML = `
+            <div class="font-semibold border-b border-slate-800 pb-1 mb-1">${formattedDate}</div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full ${
+                day.status === 'up' ? 'bg-emerald-500' : day.status === 'down' ? 'bg-rose-500' : day.status === 'partial' ? 'bg-amber-500' : 'bg-slate-500'
+              }"></span>
+              <span>${dayStatusText}</span>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">${day.checks.length} checks performed</div>
+          `;
+          
+          bar.appendChild(tooltip);
+          barContainer.appendChild(bar);
+        });
+
+        // Incident Log
+        const incidentsContainer = document.getElementById('incidents-container');
+        incidentsContainer.innerHTML = '';
+        
+        if (!data.incidents || data.incidents.length === 0) {
+          incidentsContainer.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">No incidents reported in the last 30 days.</div>`;
+        } else {
+          data.incidents.forEach(incident => {
+            const item = document.createElement('div');
+            item.className = 'py-4 flex items-start justify-between gap-4 text-sm';
+            
+            const isResolved = incident.recoveredAt !== null;
+            const statusLabel = isResolved 
+              ? `<span class="bg-emerald-950 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-semibold">Resolved</span>`
+              : `<span class="bg-rose-950 border border-rose-800 text-rose-400 px-2 py-0.5 rounded text-[10px] font-semibold animate-pulse">Ongoing</span>`;
+            
+            const durationText = isResolved 
+              ? `Duration: ${incident.durationMinutes} min`
+              : 'Outage is currently ongoing';
+
+            item.innerHTML = `
+              <div class="space-y-1">
+                <div class="font-medium text-slate-200">Outage detected</div>
+                <div class="text-xs text-slate-400">${formatDate(incident.downAt)} &rarr; ${isResolved ? formatDate(incident.recoveredAt) : 'Present'}</div>
+              </div>
+              <div class="text-right space-y-1">
+                <div>${statusLabel}</div>
+                <div class="text-xs text-slate-500">${durationText}</div>
+              </div>
+            `;
+            incidentsContainer.appendChild(item);
+          });
+        }
+
+        // Render Latency Chart (Last 24 Hours)
+        // Last 24 Hours means 24 hrs * 12 checks/hr = 288 records
+        const last24hHistory = data.history.slice(-288);
+        const chartLabels = last24hHistory.map(h => {
+          const date = new Date(h.timestamp);
+          return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        });
+        const chartDataPoints = last24hHistory.map(h => h.status === 'up' ? h.latency : 0);
+        const chartPointColors = last24hHistory.map(h => h.status === 'up' ? 'rgba(79, 70, 229, 0.4)' : 'rgba(239, 68, 68, 1)');
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        const ctx = document.getElementById('latencyChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: 'Latency (ms)',
+              data: chartDataPoints,
+              borderColor: 'rgb(99, 102, 241)',
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              borderWidth: 2,
+              pointRadius: chartDataPoints.length > 50 ? 0 : 2,
+              pointHoverRadius: 5,
+              fill: true,
+              tension: 0.15,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: '#0f172a',
+                borderColor: '#1e293b',
+                borderWidth: 1,
+                titleColor: '#f8fafc',
+                bodyColor: '#cbd5e1',
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: function(context) {
+                    const check = last24hHistory[context.dataIndex];
+                    if (check.status === 'down') {
+                      return '❌ Request Failed';
+                    }
+                    return `Latency: ${context.parsed.y} ms`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  color: '#64748b',
+                  font: {
+                    size: 10
+                  },
+                  maxTicksLimit: 12
+                },
+                border: {
+                  display: false
+                }
+              },
+              y: {
+                grid: {
+                  color: '#1e293b'
+                },
+                ticks: {
+                  color: '#64748b',
+                  font: {
+                    size: 10
+                  },
+                  callback: function(value) {
+                    return value + ' ms';
+                  }
+                },
+                border: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error('Error loading status data:', err);
+        document.getElementById('status-text').textContent = 'Error Loading Status';
+        document.getElementById('status-desc').textContent = 'Could not load monitoring records. Ensure the JSON data exists.';
+        document.getElementById('last-checked').textContent = 'Fetch error';
+        document.getElementById('last-update-pulse').className = 'w-2 h-2 rounded-full bg-rose-500 animate-pulse';
+      }
+    }
+
+    // Load initially and refresh every 1 minute client-side
+    loadStatus();
+    setInterval(loadStatus, 60000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+name: Website Uptime & Status Check
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Run every 5 minutes
+  workflow_dispatch:      # Allow running manually
+
+permissions:
+  contents: write
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Status Check
+        run: node src/check.js
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Commit and push status updates
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Only commit if data/status.json has changed
+          if git diff --quiet data/status.json; then
+            echo "No changes in status history."
+          else
+            git add data/status.json
+            git commit -m "chore: update status data [skip ci]"
+            git push
+          fi
